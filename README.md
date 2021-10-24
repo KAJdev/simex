@@ -4,6 +4,9 @@ A really bad simple regular expression engine
 ```
 Characters:
     *       Any character (stops at the first instance of the proceding character or end of string)
+    ?       Optional proceding character
+
+Escape with backslash
 ```
 
 ```py
