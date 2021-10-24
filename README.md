@@ -9,7 +9,7 @@ Characters:
 ```py
 import se
 expression = se.compile('some simex that can end with *')
-asset expression.findall("some simex that can end with anything!") == ['some simex that can end with anything!']
+assert expression.findall("some simex that can end with anything!") == ['some simex that can end with anything!']
 ```
 
 I'm not sure why this exists. It took me like an hour to make.
