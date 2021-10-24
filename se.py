@@ -1,5 +1,4 @@
 from __future__ import annotations
-from re import IGNORECASE
 from typing import Iterable, List, Optional, Union
 
 """
