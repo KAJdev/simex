@@ -6,6 +6,9 @@ Simple Expressions: A shitty regex engine
 
 Characters:
     *       Any character (stops at the first instance of the proceding character or end of string)
+    ?       Optional proceding character
+
+Escape with backslash
 """
 
 def compile(expression: str) -> Compiled:
@@ -51,6 +54,10 @@ class Compiled():
         for i,char in enumerate(self.expression):
             if char == "*":
                 self.tokens.append(Token(_peek(self.expression, i+1), TokenType.ANY))
+            elif char == "?":
+                self.tokens.append(Token(_peek(self.expression, i+1), TokenType.OPTIONAL))
+            elif char == "\\":
+                self.tokens.append(Token(_peek(self.expression, i+1), TokenType.ESCAPE))
             else:
                 self.tokens.append(Token(char, TokenType.CHAR))
 
@@ -82,23 +89,15 @@ class Compiled():
 
                 if token is None:
                     break
-                if char is None:
+                if char is None and token.type != TokenType.OPTIONAL:
                     match = []
                     break
 
-                if token.type == TokenType.ANY:
-                    match.append(char)
-
-                    while token.value != (peek := _advance_peek(string)) and peek is not None:
-                        match.append(peek)
-                        char = _advance(string)
-                elif token.type == TokenType.CHAR:
-                    if token.value == char:
-                        match.append(char)
-                    else:
-                        match = []
-                        break
-                    
+                value = token.match(tokens, string, char)
+                if value is None:
+                    match = []
+                    break
+                match.extend(value)
             
             if len(match) > 0:
                 matches.append(''.join(match))
@@ -124,7 +123,48 @@ class Token():
     def __hash__(self) -> int:
         return hash((self.value, self.type))
 
+    def match(
+        self,
+        tokens: List[Token],
+        chars: List[str],
+        char: str
+    ) -> Optional[List[str]]:
+        """Match the token against the characters"""
+
+        match = []
+        if self.type == TokenType.ESCAPE:
+            _advance(tokens)
+            if self.value == char:
+                match.append(char)
+            else:
+                return None
+        elif self.type == TokenType.OPTIONAL:
+            token = _advance(tokens)
+
+            value = token.match(tokens, chars, char)
+            if value is not None:
+                match.extend(value)
+            else:
+                _advance(tokens)
+        elif self.type == TokenType.ANY:
+            match.append(char)
+            if char != self.value:
+                while self.value != (peek := _advance_peek(chars)) and peek is not None:
+                    match.append(peek)
+                    char = _advance(chars)
+            else:
+                _advance(tokens)
+        elif self.type == TokenType.CHAR:
+            if self.value == char:
+                match.append(char)
+            else:
+                return None
+
+        return match
+
 class TokenType:
     """Types of tokens"""
     CHAR = 0
     ANY = 1
+    OPTIONAL = 2
+    ESCAPE = 3
