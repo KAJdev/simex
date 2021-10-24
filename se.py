@@ -87,6 +87,8 @@ class Compiled():
                     break
 
                 if token.type == TokenType.ANY:
+                    match.append(char)
+
                     while token.value != (peek := _advance_peek(string)) and peek is not None:
                         match.append(peek)
                         char = _advance(string)
